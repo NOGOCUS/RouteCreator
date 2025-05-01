@@ -56,9 +56,31 @@ def read_locations(db: Session = Depends(get_db)):
     locations = db.query(models.Location).all()
     return locations
 
+
 @app.post("/time-matrix/", response_model=schemas.TimeMatrixResponse)
 def create_time_matrix(matrix: schemas.TimeMatrixCreate, db: Session = Depends(get_db)):
-    db_matrix = models.TimeMatrix(**matrix.dict())
+    from_id = matrix.from_location_id
+    to_id = matrix.to_location_id
+
+    if from_id == to_id:
+        raise HTTPException(status_code=400, detail="from_id и to_id не могут совпадать")
+
+    # Нормализуем порядок: всегда от меньшего к большему
+    a, b = sorted([from_id, to_id])
+
+    existing = db.query(models.TimeMatrix).filter(
+        models.TimeMatrix.from_location_id == a,
+        models.TimeMatrix.to_location_id == b
+    ).first()
+
+    if existing:
+        raise HTTPException(status_code=400, detail="Запись уже существует")
+
+    db_matrix = models.TimeMatrix(
+        from_location_id=a,
+        to_location_id=b,
+        travel_time=matrix.travel_time
+    )
     db.add(db_matrix)
     db.commit()
     db.refresh(db_matrix)
@@ -72,16 +94,24 @@ def read_time_matrix(db: Session = Depends(get_db)):
 
 @app.put("/time-matrix/update", response_model=schemas.TimeMatrixResponse)
 def update_time_matrix(matrix: schemas.TimeMatrixCreate, db: Session = Depends(get_db)):
-    # Проверяем, существует ли запись
+    from_id = matrix.from_location_id
+    to_id = matrix.to_location_id
+
+    if from_id == to_id:
+        raise HTTPException(status_code=400, detail="from_id и to_id не могут совпадать")
+
+    # Используем симметрию: ищем по min, max
+    a, b = sorted([from_id, to_id])
+
     db_entry = db.query(models.TimeMatrix).filter(
-        models.TimeMatrix.from_location_id == matrix.from_location_id,
-        models.TimeMatrix.to_location_id == matrix.to_location_id
+        models.TimeMatrix.from_location_id == a,
+        models.TimeMatrix.to_location_id == b
     ).first()
 
     if not db_entry:
         raise HTTPException(status_code=404, detail="Запись не найдена")
 
-    # Обновляем значение времени
+    # Обновляем время у найденной записи
     db_entry.travel_time = matrix.travel_time
     db.commit()
     db.refresh(db_entry)
