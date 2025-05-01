@@ -70,6 +70,24 @@ def read_time_matrix(db: Session = Depends(get_db)):
     times = db.query(models.TimeMatrix).all()
     return times
 
+@app.put("/time-matrix/update", response_model=schemas.TimeMatrixResponse)
+def update_time_matrix(matrix: schemas.TimeMatrixCreate, db: Session = Depends(get_db)):
+    # Проверяем, существует ли запись
+    db_entry = db.query(models.TimeMatrix).filter(
+        models.TimeMatrix.from_location_id == matrix.from_location_id,
+        models.TimeMatrix.to_location_id == matrix.to_location_id
+    ).first()
+
+    if not db_entry:
+        raise HTTPException(status_code=404, detail="Запись не найдена")
+
+    # Обновляем значение времени
+    db_entry.travel_time = matrix.travel_time
+    db.commit()
+    db.refresh(db_entry)
+
+    return db_entry
+
 
 @app.post("/routes/", response_model=schemas.RouteResponse)
 def create_route(route: schemas.RouteCreate, db: Session = Depends(get_db)):
