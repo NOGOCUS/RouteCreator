@@ -35,3 +35,14 @@ class Route(Base):
     time = Column(String)  # формат HH:MM
     start_location = relationship("Location", foreign_keys=[start_location_id])
     end_location = relationship("Location", foreign_keys=[end_location_id])
+
+#Таблица-расписание
+class Schedule(Base):
+    __tablename__ = "schedules"
+    id = Column(Integer, primary_key=True)
+    driver_name = Column(String)
+    route_id = Column(Integer, ForeignKey("routes.id"))
+    time = Column(String)  # время начала маршрута (HH:MM)
+    end_time = Column(String)  # время окончания
+    duration = Column(Integer)  # длительность в минутах
+    route = relationship("Route", foreign_keys=[route_id])
