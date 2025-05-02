@@ -142,3 +142,17 @@ def delete_route(route_id: int, db: Session = Depends(get_db)):
     db.delete(route)
     db.commit()
     return {"status": "Успешно удален", "route_id": route_id}
+
+#Расписание
+@app.get("/get-schedule")
+def get_schedule(db: Session = Depends(get_db)):
+    schedule = db.query(models.Schedule).order_by(models.Schedule.driver_name, models.Schedule.time).all()
+    if not schedule:
+        raise HTTPException(status_code=404, detail="Расписание не найдено")
+    return schedule
+
+@app.post("/clear-schedule")
+def clear_schedule(db: Session = Depends(get_db)):
+    db.query(models.Schedule).delete()
+    db.commit()
+    return {"status": "Расписание очищено"}
