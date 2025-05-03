@@ -13,8 +13,6 @@ class Location(Base):
     __tablename__ = "locations"
     id = Column(Integer, primary_key=True)
     name = Column(String, unique=True, index=True)
-    from_times = relationship("TimeMatrix", foreign_keys="TimeMatrix.from_location_id")
-    to_times = relationship("TimeMatrix", foreign_keys="TimeMatrix.to_location_id")
 
 #Таблица времени в дороге между двумя пунктами
 class TimeMatrix(Base):
