@@ -1,5 +1,7 @@
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
+from datetime import datetime, timedelta
+import random
 from typing import List
 
 import models
@@ -156,3 +158,185 @@ def clear_schedule(db: Session = Depends(get_db)):
     db.query(models.Schedule).delete()
     db.commit()
     return {"status": "Расписание очищено"}
+
+
+@app.get("/generate-schedule")
+def generate_schedule(db: Session = Depends(get_db)):
+    drivers_db = db.query(models.Driver).all()
+    locations_db = db.query(models.Location).all()
+    time_matrix_db = db.query(models.TimeMatrix).all()
+    routes_db = db.query(models.Route).all()
+
+    if not drivers_db or not locations_db or not time_matrix_db or not routes_db:
+        raise HTTPException(status_code=400, detail="Недостающие данные для расчета")
+
+
+
+
+    def create_individual():
+        unsorted = list({
+            "route.id": route.id,
+            "start": route.start_location.name,
+            "end": route.end_location.name,
+            "time": route.time,
+            "start.id": route.start_location_id,
+            "end.id": route.end_location_id,
+            "driver.id": None
+        } for route in routes_db)
+        for __ in unsorted:
+            _=random.choice(drivers_db)
+            __["driver.id"]=_.id
+        individual=sorted(unsorted,key=lambda r: time_str_to_minutes(r["time"]))
+        return individual
+
+
+
+    location_map = {loc.id: loc.name for loc in locations_db}
+
+    def time_str_to_minutes(t):
+        return datetime.strptime(t, "%H:%M")
+
+    def minutes_to_time_str(dt):
+        return dt.strftime("%H:%M")
+
+    time_matrix = {}
+    for tm in time_matrix_db:
+        time_matrix[(tm.from_location_id, tm.to_location_id)] = tm.travel_time
+
+    def get_travel_time(a, b):
+        if a == b:
+            return 0
+        x, y = sorted([a, b])
+        return time_matrix.get((x, y), 30)
+
+
+    def grade(individual):
+        score = 0
+        PENALTY_PER_TIME_CONFLICT = 100
+        PENALTY_PER_ROUTE_NUMBER = 1
+        extra_time=10
+
+        ideal_per_driver = len(routes_db) / len(drivers_db)
+        driver_count=dict()
+        for _ in drivers_db:
+            driver_count[_.id] = 0
+        for _ in individual:
+            driver_count[_["driver.id"]]+=1
+
+        for _ in drivers_db:
+            delta = abs(driver_count[_.id] - ideal_per_driver)
+            if not {delta < 1}:
+                score -= int(delta * PENALTY_PER_ROUTE_NUMBER)
+
+        last_end_time={}
+        last_end_loc={}
+        for _ in drivers_db:
+            last_end_time[_.id] = None
+            last_end_loc[_.id] = None
+
+        for driver_route in individual:
+            start_time = time_str_to_minutes(driver_route["time"])
+            travel_duration = get_travel_time(driver_route["start.id"], driver_route["end.id"])
+            end_time = start_time + timedelta(minutes=travel_duration)
+
+            if last_end_time[driver_route["driver.id"]] is not None and last_end_loc[driver_route["driver.id"]] is not None:
+                transfer_time = get_travel_time(last_end_loc[driver_route["driver.id"]], driver_route["start.id"])
+                expected_start = last_end_time[driver_route["driver.id"]] + timedelta(minutes=transfer_time + extra_time)
+                if start_time < expected_start:
+                    score -= PENALTY_PER_TIME_CONFLICT
+
+            last_end_time[driver_route["driver.id"]] = end_time
+            last_end_loc[driver_route["driver.id"]] = driver_route["end.id"]
+
+        return score
+
+
+    def crossover(parent1, parent2):
+        child = list({} for _ in routes_db)
+        i=0
+        for _ in routes_db:
+            if random.random() > 0.5:
+                child[i] = parent1[i].copy()
+            else:
+                child[i] = parent2[i].copy()
+            i+=1
+        return child
+
+
+
+    def mutate(individual):
+        for _ in individual:
+            if random.random() < MUTATION_PROB:
+                __=random.choice(individual)
+                _["driver.id"],__["driver.id"]=__["driver.id"],_["driver.id"]
+                break
+        return individual
+
+
+    def evolve(population):
+        population.sort(key=lambda ind: grade(ind), reverse=True)
+        next_gen = population[:POPULATION_SIZE//5]  # элита
+
+        while len(next_gen) < POPULATION_SIZE:
+            p1 = random.choice(population[:POPULATION_SIZE//4])
+            p2 = random.choice(population[:POPULATION_SIZE//4])
+            child = crossover(p1, p2)
+            child = mutate(child)
+            next_gen.append(child)
+        return next_gen
+
+
+
+    POPULATION_SIZE = 200
+    GENERATIONS = 1000
+    MUTATION_PROB = 0.1
+
+
+    population = [create_individual() for _ in range(POPULATION_SIZE)]
+
+    for generation in range(GENERATIONS):
+        population = evolve(population)
+
+    best_list = max(population, key=grade)
+    if grade(best_list)<-99:
+        raise HTTPException(status_code=400, detail="Ошибка генерации расписания: вероятно,недостаточно водителей")
+
+
+    result = []
+    for _ in drivers_db:
+        driver_result = {
+            "driver": _.name,
+            "routes": []
+        }
+
+        for __ in best_list:
+            if __["driver.id"]==_.id:
+                start_time = time_str_to_minutes(__["time"])
+                travel_duration = get_travel_time(__["start.id"], __["end.id"])
+                end_time = start_time + timedelta(minutes=travel_duration)
+
+                driver_result["routes"].append({
+                    "route.id": __["route.id"],
+                    "start": __["start"],
+                    "end": __["end"],
+                    "time": __["time"],
+                    "end_time": minutes_to_time_str(end_time),
+                })
+        result.append(driver_result)
+
+    db.query(models.Schedule).delete()
+    db.commit()
+
+    for driver_result in result:
+        driver_name = driver_result["driver"]
+        for route in driver_result["routes"]:
+            schedule_entry = models.Schedule(
+                driver_name=driver_name,
+                route_id=route["route.id"],
+                time=route["time"],
+                end_time=route["end_time"]
+            )
+            db.add(schedule_entry)
+        db.commit()
+
+    return {"schedule": result}
