@@ -57,6 +57,25 @@ class RouteResponse(RouteBase):
     class Config:
         orm_mode = True
 
+# --- Расписание ---
+class ScheduleBase(BaseModel):
+    driver_name: str
+    route_id: int
+    time: str
+    end_time: str
+
+
+
+class ScheduleCreate(ScheduleBase):
+    pass
+
+
+class ScheduleResponse(ScheduleBase):
+    id: int
+    class Config:
+        orm_mode = True
+
+
 # --- Пользователь ---
 class UserCreate(BaseModel):
     username: str

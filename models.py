@@ -12,11 +12,14 @@ class Driver(Base):
     Атрибуты:
         id (int): Уникальный идентификатор водителя.
         name (str): Имя водителя (уникальное).
+        user_id (int): Идентификатор пользователя.
+        user: Пользователь.
     """
     __tablename__ = "drivers"
     id = Column(Integer, primary_key=True)
     name = Column(String, unique=True, index=True)
-
+    user_id = Column(Integer, ForeignKey("users.id"))
+    user = relationship("User")
 
 class Location(Base):
     """
@@ -24,11 +27,14 @@ class Location(Base):
     Атрибуты:
         id (int): Уникальный идентификатор пункта назначения.
         name (str): Название  пункта назначения (уникальное).
+        user_id (int): Идентификатор пользователя.
+        user: Пользователь.
     """
     __tablename__ = "locations"
     id = Column(Integer, primary_key=True)
     name = Column(String, unique=True, index=True)
-
+    user_id = Column(Integer, ForeignKey("users.id"))
+    user = relationship("User")
 
 class TimeMatrix(Base):
     """
@@ -43,6 +49,8 @@ class TimeMatrix(Base):
         travel_time (float): Время в пути (в минутах)
         from_location: Cтартовая локация.
         to_location: Конечная локация.
+        user_id (int): Идентификатор пользователя.
+        user: Пользователь.
     """
     __tablename__ = "time_matrix"
     id = Column(Integer, primary_key=True)
@@ -51,7 +59,8 @@ class TimeMatrix(Base):
     travel_time = Column(Float)
     from_location = relationship("Location", foreign_keys=[from_location_id])
     to_location = relationship("Location", foreign_keys=[to_location_id])
-
+    user_id = Column(Integer, ForeignKey("users.id"))
+    user = relationship("User")
 
 class Route(Base):
     """
@@ -65,6 +74,8 @@ class Route(Base):
         time (str): Время отправления (формат HH:MM)
         start_location (Location): Стартовая локация.
         end_location (Location): Конечная локация.
+        user_id (int): Идентификатор пользователя.
+        user: Пользователь.
     """
     __tablename__ = "routes"
     id = Column(Integer, primary_key=True)
@@ -73,7 +84,8 @@ class Route(Base):
     time = Column(String)
     start_location = relationship("Location", foreign_keys=[start_location_id])
     end_location = relationship("Location", foreign_keys=[end_location_id])
-
+    user_id = Column(Integer, ForeignKey("users.id"))
+    user = relationship("User")
 
 class Schedule(Base):
     """
@@ -88,6 +100,8 @@ class Schedule(Base):
         end_location_id (int): Идентификатор конечной локации.
         start_location (str): Название стартовой локации.
         end_location (str): Название конечной локации.
+        user_id (int): Идентификатор пользователя.
+        user: Пользователь.
     """
     __tablename__ = "schedules"
     id = Column(Integer, primary_key=True)
@@ -96,7 +110,8 @@ class Schedule(Base):
     time = Column(String)
     end_time = Column(String)
     route = relationship("Route", foreign_keys=[route_id])
-
+    user_id = Column(Integer, ForeignKey("users.id"))
+    user = relationship("User")
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
