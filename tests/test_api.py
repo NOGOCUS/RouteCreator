@@ -2,7 +2,8 @@ import os
 os.environ["ENV"] = "test"
 
 from fastapi.testclient import TestClient
-from app.main import app, get_db
+from app.main import app
+from app.db.database import get_db
 from app.db.database import Base, engine
 from sqlalchemy.orm import sessionmaker
 
