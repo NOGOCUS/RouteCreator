@@ -25,7 +25,7 @@ def get_db():
         db.close()
 
 
-@app.post("/drivers/", response_model=schemas.DriverResponse)
+@app.post("/drivers/", response_model=schemas.DriverResponse, tags=["Работа с БД"])
 def create_driver(driver: schemas.DriverCreate, db: Session = Depends(get_db)):
     db_driver = models.Driver(**driver.dict())
     db.add(db_driver)
@@ -34,12 +34,12 @@ def create_driver(driver: schemas.DriverCreate, db: Session = Depends(get_db)):
     return db_driver
 
 
-@app.get("/drivers/", response_model=List[schemas.DriverResponse])
+@app.get("/drivers/", response_model=List[schemas.DriverResponse], tags=["Работа с БД"])
 def read_drivers(db: Session = Depends(get_db)):
     drivers = db.query(models.Driver).all()
     return drivers
 
-@app.delete("/drivers/{driver_id}")
+@app.delete("/drivers/{driver_id}", tags=["Работа с БД"])
 def delete_driver(driver_id: int, db: Session = Depends(get_db)):
     driver = db.query(models.Driver).filter(models.Driver.id == driver_id).first()
     if not driver:
@@ -49,7 +49,7 @@ def delete_driver(driver_id: int, db: Session = Depends(get_db)):
     return {"status": "Успешно удален", "driver_id": driver_id}
 
 
-@app.post("/locations/", response_model=schemas.LocationResponse)
+@app.post("/locations/", response_model=schemas.LocationResponse, tags=["Работа с БД"])
 def create_location(location: schemas.LocationCreate, db: Session = Depends(get_db)):
     db_location = models.Location(**location.dict())
     db.add(db_location)
@@ -58,13 +58,13 @@ def create_location(location: schemas.LocationCreate, db: Session = Depends(get_
     return db_location
 
 
-@app.get("/locations/", response_model=List[schemas.LocationResponse])
+@app.get("/locations/", response_model=List[schemas.LocationResponse], tags=["Работа с БД"])
 def read_locations(db: Session = Depends(get_db)):
     locations = db.query(models.Location).all()
     return locations
 
 
-@app.post("/time-matrix/", response_model=schemas.TimeMatrixResponse)
+@app.post("/time-matrix/", response_model=schemas.TimeMatrixResponse, tags=["Работа с БД"])
 def create_time_matrix(matrix: schemas.TimeMatrixCreate, db: Session = Depends(get_db)):
     from_id = matrix.from_location_id
     to_id = matrix.to_location_id
@@ -94,12 +94,12 @@ def create_time_matrix(matrix: schemas.TimeMatrixCreate, db: Session = Depends(g
     return db_matrix
 
 
-@app.get("/time-matrix/", response_model=List[schemas.TimeMatrixResponse])
+@app.get("/time-matrix/", response_model=List[schemas.TimeMatrixResponse], tags=["Работа с БД"])
 def read_time_matrix(db: Session = Depends(get_db)):
     times = db.query(models.TimeMatrix).all()
     return times
 
-@app.put("/time-matrix/update", response_model=schemas.TimeMatrixResponse)
+@app.put("/time-matrix/update", response_model=schemas.TimeMatrixResponse, tags=["Работа с БД"])
 def update_time_matrix(matrix: schemas.TimeMatrixCreate, db: Session = Depends(get_db)):
     from_id = matrix.from_location_id
     to_id = matrix.to_location_id
@@ -126,7 +126,7 @@ def update_time_matrix(matrix: schemas.TimeMatrixCreate, db: Session = Depends(g
     return db_entry
 
 
-@app.post("/routes/", response_model=schemas.RouteResponse)
+@app.post("/routes/", response_model=schemas.RouteResponse, tags=["Работа с БД"])
 def create_route(route: schemas.RouteCreate, db: Session = Depends(get_db)):
     db_route = models.Route(**route.dict())
     db.add(db_route)
@@ -135,13 +135,13 @@ def create_route(route: schemas.RouteCreate, db: Session = Depends(get_db)):
     return db_route
 
 
-@app.get("/routes/", response_model=List[schemas.RouteResponse])
+@app.get("/routes/", response_model=List[schemas.RouteResponse], tags=["Работа с БД"])
 def read_routes(db: Session = Depends(get_db)):
     routes = db.query(models.Route).all()
     return routes
 
 
-@app.delete("/routes/{route_id}")
+@app.delete("/routes/{route_id}", tags=["Работа с БД"])
 def delete_route(route_id: int, db: Session = Depends(get_db)):
     route = db.query(models.Route).filter(models.Route.id == route_id).first()
     if not route:
@@ -151,21 +151,21 @@ def delete_route(route_id: int, db: Session = Depends(get_db)):
     return {"status": "Успешно удален", "route_id": route_id}
 
 #Расписание
-@app.get("/get-schedule")
+@app.get("/get-schedule", tags=["Генерация и просмотр расписания"])
 def get_schedule(db: Session = Depends(get_db)):
     schedule = db.query(models.Schedule).order_by(models.Schedule.driver_name,models.Schedule.time).all()
     if not schedule:
         raise HTTPException(status_code=404, detail="Расписание не найдено")
     return schedule
 
-@app.post("/clear-schedule")
+@app.post("/clear-schedule", tags=["Генерация и просмотр расписания"])
 def clear_schedule(db: Session = Depends(get_db)):
     db.query(models.Schedule).delete()
     db.commit()
     return {"status": "Расписание очищено"}
 
 
-@app.get("/generate-schedule")
+@app.get("/generate-schedule", tags=["Генерация и просмотр расписания"])
 def generate_schedule(db: Session = Depends(get_db)):
     drivers_db = db.query(models.Driver).all()
     locations_db = db.query(models.Location).all()
@@ -197,7 +197,7 @@ def generate_schedule(db: Session = Depends(get_db)):
     return {"schedule": result}
 
 
-@app.post("/register", response_model=schemas.UserResponse)
+@app.post("/register", response_model=schemas.UserResponse, tags=["Авторизация и безопасность"])
 def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
     # Проверка на существование пользователя
     existing_user = db.query(models.User).filter(models.User.username == user.username).first()
@@ -218,7 +218,7 @@ def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
     return db_user
 
 
-@app.post("/login")
+@app.post("/login", tags=["Авторизация и безопасность"])
 def login(credentials: schemas.UserLogin, db: Session = Depends(get_db)):
     # Ищем пользователя по имени
     db_user = db.query(models.User).filter(models.User.username == credentials.username).first()
