@@ -1,14 +1,19 @@
+"""
+CRUD-методы для авторизации и регистрации пользователей
+"""
+from datetime import datetime, timedelta, timezone
+import os
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from jose import jwt, JWTError
-from datetime import datetime, timedelta, timezone
 from passlib.context import CryptContext
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-import app.models.models as models
-import app.schemas.schemas as schemas
-from app.db.database import get_db
-import os
 from dotenv import load_dotenv
+
+from app.models import models
+from app.schemas import schemas
+from app.db.database import get_db
+
 
 load_dotenv()
 

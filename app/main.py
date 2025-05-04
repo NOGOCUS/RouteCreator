@@ -1,3 +1,6 @@
+"""
+Основной файл, через который происходит запуск приложения
+"""
 from fastapi import FastAPI
 from app.db.database import engine, Base
 from app.crud.auth import router as auth_router

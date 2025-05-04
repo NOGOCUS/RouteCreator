@@ -1,3 +1,6 @@
+"""
+Программа для выполнения тестов на основе TestClient
+"""
 import os
 os.environ["ENV"] = "test"
 

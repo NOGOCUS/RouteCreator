@@ -1,7 +1,10 @@
+"""
+CRUD-методы для работы с таблицами
+"""
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-import app.models.models as models
-import app.schemas.schemas as schemas
+from app.models import models
+from app.schemas import schemas
 from app.db.database import get_db
 from app.crud.auth import get_current_user
 
