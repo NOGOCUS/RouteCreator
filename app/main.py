@@ -11,10 +11,10 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import jwt, JWTError
 from passlib.context import CryptContext
 
-import models
-import schemas
-from database import engine, SessionLocal, Base
-from genetic.algorithm import run_genetic_algorithm
+import app.models.models as models
+import app.schemas.schemas as schemas
+from app.db.database import engine, SessionLocal, Base
+from app.genetic.algorithm import run_genetic_algorithm
 
 
 Base.metadata.create_all(bind=engine)
@@ -102,7 +102,7 @@ def read_drivers(db: Session = Depends(get_db), current_user: models.User = Depe
 def delete_driver(driver_id: int, db: Session = Depends(get_db),
                   current_user: models.User = Depends(get_current_user)):
     driver = db.query(models.Driver).filter(models.Driver.id == driver_id,
-        models.Driver.user_id == current_user.id).first()
+                                            models.Driver.user_id == current_user.id).first()
     if not driver:
         raise HTTPException(status_code=404, detail="Водитель не найден")
     db.delete(driver)
@@ -151,7 +151,8 @@ def create_time_matrix(matrix: schemas.TimeMatrixCreate, db: Session = Depends(g
     db_matrix = models.TimeMatrix(
         from_location_id=a,
         to_location_id=b,
-        travel_time=matrix.travel_time
+        travel_time=matrix.travel_time,
+        user_id=current_user.id
     )
     db.add(db_matrix)
     db.commit()
