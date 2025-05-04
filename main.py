@@ -5,7 +5,7 @@
 from typing import List
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
-
+from fastapi.security import OAuth2PasswordRequestForm
 
 import models
 import schemas
@@ -219,10 +219,13 @@ def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
 
 
 @app.post("/login", tags=["Авторизация и безопасность"])
-def login(credentials: schemas.UserLogin, db: Session = Depends(get_db)):
+def login(
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    db: Session = Depends(get_db)
+):
     # Ищем пользователя по имени
-    db_user = db.query(models.User).filter(models.User.username == credentials.username).first()
-    if not db_user or not db_user.verify_password(credentials.password):
+    db_user = db.query(models.User).filter(models.User.username == form_data.username).first()
+    if not db_user or not db_user.verify_password(form_data.password):
         raise HTTPException(
             status_code=401,
             detail="Неверное имя пользователя или пароль",
