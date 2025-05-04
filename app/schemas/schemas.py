@@ -13,7 +13,7 @@ class DriverCreate(DriverBase):
 class DriverResponse(DriverBase):
     id: int
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # --- Пункт назначения ---
 class LocationBase(BaseModel):
@@ -25,7 +25,7 @@ class LocationCreate(LocationBase):
 class LocationResponse(LocationBase):
     id: int
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 # --- Время в пути ---
@@ -40,7 +40,7 @@ class TimeMatrixCreate(TimeMatrixBase):
 class TimeMatrixResponse(TimeMatrixBase):
     id: int
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 # --- Маршрут ---
@@ -55,7 +55,7 @@ class RouteCreate(RouteBase):
 class RouteResponse(RouteBase):
     id: int
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # --- Расписание ---
 class ScheduleBase(BaseModel):
@@ -73,7 +73,7 @@ class ScheduleCreate(ScheduleBase):
 class ScheduleResponse(ScheduleBase):
     id: int
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 # --- Пользователь ---
@@ -89,7 +89,7 @@ class UserResponse(BaseModel):
     id: int
     username: str
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class Token(BaseModel):

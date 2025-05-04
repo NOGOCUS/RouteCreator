@@ -86,7 +86,7 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], db: Se
 @app.post("/drivers/", response_model=schemas.DriverResponse, tags=["Работа с БД"])
 def create_driver(driver: schemas.DriverCreate, db: Session = Depends(get_db),
                   current_user: models.User = Depends(get_current_user)):
-    db_driver = models.Driver(**driver.dict(), user_id=current_user.id)
+    db_driver = models.Driver(**driver.model_dump(), user_id=current_user.id)
     db.add(db_driver)
     db.commit()
     db.refresh(db_driver)
@@ -113,7 +113,7 @@ def delete_driver(driver_id: int, db: Session = Depends(get_db),
 @app.post("/locations/", response_model=schemas.LocationResponse, tags=["Работа с БД"])
 def create_location(location: schemas.LocationCreate, db: Session = Depends(get_db),
                     current_user: models.User = Depends(get_current_user)):
-    db_location = models.Location(**location.dict(), user_id=current_user.id)
+    db_location = models.Location(**location.model_dump(), user_id=current_user.id)
     db.add(db_location)
     db.commit()
     db.refresh(db_location)
@@ -197,7 +197,7 @@ def update_time_matrix(matrix: schemas.TimeMatrixCreate, db: Session = Depends(g
 @app.post("/routes/", response_model=schemas.RouteResponse, tags=["Работа с БД"])
 def create_route(route: schemas.RouteCreate, db: Session = Depends(get_db),
                  current_user: models.User = Depends(get_current_user)):
-    db_route = models.Route(**route.dict(), user_id=current_user.id)
+    db_route = models.Route(**route.model_dump(), user_id=current_user.id)
     db.add(db_route)
     db.commit()
     db.refresh(db_route)
