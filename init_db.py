@@ -1,6 +1,8 @@
+"""
+Модуль для записи тестовых данных в БД
+"""
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from datetime import datetime
 import models
 
 # Подключение к базе данных
@@ -84,16 +86,16 @@ session.commit()
 
 
 for route in routes:
-    start_loc = route["start"]
-    end_loc = route["end"]
-    route_time = route["time"]
-    start_id = location_id_map[start_loc]
-    end_id = location_id_map[end_loc]
+    START_LOC = route["start"]
+    END_LOC = route["end"]
+    ROUTE_TIME = route["time"]
+    start_id = location_id_map[START_LOC]
+    end_id = location_id_map[END_LOC]
 
     db_route = models.Route(
         start_location_id=start_id,
         end_location_id=end_id,
-        time=route_time
+        time=ROUTE_TIME
     )
     session.add(db_route)
 session.commit()
