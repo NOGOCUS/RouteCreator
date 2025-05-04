@@ -56,7 +56,7 @@ def run_genetic_algorithm(drivers_db, locations_db, time_matrix_db, routes_db):
             driver_count[_["driver.id"]] += 1
         for _ in drivers_db:
             delta = abs(driver_count[_.id] - ideal_per_driver)
-            if not {delta < 1}:
+            if not delta < 1:
                 score -= int(delta * penalty_per_number)
         last_end_time = {}
         last_end_loc = {}
