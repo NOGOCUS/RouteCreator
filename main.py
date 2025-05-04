@@ -1,8 +1,13 @@
-from fastapi import FastAPI, Depends, HTTPException
-from sqlalchemy.orm import Session
+"""
+Основной файл, через него происходит запуск веб-приложения,
+здесь же (временно) хранятся методы CRUD и генетический алгоритм.
+"""
 from datetime import datetime, timedelta
 import random
 from typing import List
+from fastapi import FastAPI, Depends, HTTPException
+from sqlalchemy.orm import Session
+
 
 import models
 import schemas
@@ -148,7 +153,7 @@ def delete_route(route_id: int, db: Session = Depends(get_db)):
 #Расписание
 @app.get("/get-schedule")
 def get_schedule(db: Session = Depends(get_db)):
-    schedule = db.query(models.Schedule).order_by(models.Schedule.driver_name, models.Schedule.time).all()
+    schedule = db.query(models.Schedule).order_by(models.Schedule.driver_name,models.Schedule.time).all()
     if not schedule:
         raise HTTPException(status_code=404, detail="Расписание не найдено")
     return schedule
@@ -189,10 +194,6 @@ def generate_schedule(db: Session = Depends(get_db)):
         individual=sorted(unsorted,key=lambda r: time_str_to_minutes(r["time"]))
         return individual
 
-
-
-    location_map = {loc.id: loc.name for loc in locations_db}
-
     def time_str_to_minutes(t):
         return datetime.strptime(t, "%H:%M")
 
@@ -212,12 +213,12 @@ def generate_schedule(db: Session = Depends(get_db)):
 
     def grade(individual):
         score = 0
-        PENALTY_PER_TIME_CONFLICT = 100
-        PENALTY_PER_ROUTE_NUMBER = 1
+        penalty_per_time = 100
+        penalty_per_number = 1
         extra_time=10
 
         ideal_per_driver = len(routes_db) / len(drivers_db)
-        driver_count=dict()
+        driver_count={}
         for _ in drivers_db:
             driver_count[_.id] = 0
         for _ in individual:
@@ -226,7 +227,7 @@ def generate_schedule(db: Session = Depends(get_db)):
         for _ in drivers_db:
             delta = abs(driver_count[_.id] - ideal_per_driver)
             if not {delta < 1}:
-                score -= int(delta * PENALTY_PER_ROUTE_NUMBER)
+                score -= int(delta * penalty_per_number)
 
         last_end_time={}
         last_end_loc={}
@@ -238,12 +239,11 @@ def generate_schedule(db: Session = Depends(get_db)):
             start_time = time_str_to_minutes(driver_route["time"])
             travel_duration = get_travel_time(driver_route["start.id"], driver_route["end.id"])
             end_time = start_time + timedelta(minutes=travel_duration)
-
-            if last_end_time[driver_route["driver.id"]] is not None and last_end_loc[driver_route["driver.id"]] is not None:
-                transfer_time = get_travel_time(last_end_loc[driver_route["driver.id"]], driver_route["start.id"])
+            if (last_end_time[driver_route["driver.id"]] is not None and last_end_loc[driver_route["driver.id"]] is not None):
+                transfer_time = get_travel_time(last_end_loc[driver_route["driver.id"]],driver_route["start.id"])
                 expected_start = last_end_time[driver_route["driver.id"]] + timedelta(minutes=transfer_time + extra_time)
                 if start_time < expected_start:
-                    score -= PENALTY_PER_TIME_CONFLICT
+                    score -= penalty_per_time
 
             last_end_time[driver_route["driver.id"]] = end_time
             last_end_loc[driver_route["driver.id"]] = driver_route["end.id"]
@@ -266,7 +266,7 @@ def generate_schedule(db: Session = Depends(get_db)):
 
     def mutate(individual):
         for _ in individual:
-            if random.random() < MUTATION_PROB:
+            if random.random() < mutation_prob:
                 __=random.choice(individual)
                 _["driver.id"],__["driver.id"]=__["driver.id"],_["driver.id"]
                 break
@@ -275,11 +275,11 @@ def generate_schedule(db: Session = Depends(get_db)):
 
     def evolve(population):
         population.sort(key=lambda ind: grade(ind), reverse=True)
-        next_gen = population[:POPULATION_SIZE//5]  # элита
+        next_gen = population[:population_size//5]  # элита
 
-        while len(next_gen) < POPULATION_SIZE:
-            p1 = random.choice(population[:POPULATION_SIZE//4])
-            p2 = random.choice(population[:POPULATION_SIZE//4])
+        while len(next_gen) < population_size:
+            p1 = random.choice(population[:population_size//4])
+            p2 = random.choice(population[:population_size//4])
             child = crossover(p1, p2)
             child = mutate(child)
             next_gen.append(child)
@@ -287,21 +287,19 @@ def generate_schedule(db: Session = Depends(get_db)):
 
 
 
-    POPULATION_SIZE = 200
-    GENERATIONS = 1000
-    MUTATION_PROB = 0.1
+    population_size = 200
+    generations = 1000
+    mutation_prob = 0.1
 
 
-    population = [create_individual() for _ in range(POPULATION_SIZE)]
+    population = [create_individual() for _ in range(population_size)]
 
-    for generation in range(GENERATIONS):
+    for generation in range(generations):
         population = evolve(population)
 
     best_list = max(population, key=grade)
     if grade(best_list)<-99:
-        raise HTTPException(status_code=400, detail="Ошибка генерации расписания: вероятно,недостаточно водителей")
-
-
+        raise HTTPException(status_code=400, detail="Ошибка генерации: вероятно,недостаточно водителей")
     result = []
     for _ in drivers_db:
         driver_result = {
@@ -338,5 +336,4 @@ def generate_schedule(db: Session = Depends(get_db)):
             )
             db.add(schedule_entry)
         db.commit()
-
     return {"schedule": result}
