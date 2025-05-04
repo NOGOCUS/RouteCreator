@@ -2,8 +2,6 @@
 Основной файл, через него происходит запуск веб-приложения,
 здесь же (временно) хранятся методы CRUD и генетический алгоритм.
 """
-from datetime import datetime, timedelta
-import random
 from typing import List
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -197,3 +195,37 @@ def generate_schedule(db: Session = Depends(get_db)):
     db.commit()
 
     return {"schedule": result}
+
+
+@app.post("/register", response_model=schemas.UserResponse)
+def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
+    # Проверка на существование пользователя
+    existing_user = db.query(models.User).filter(models.User.username == user.username).first()
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Пользователь с таким именем уже существует")
+
+    # Хэшируем пароль
+    hashed_password = models.User.hash_password(user.password)
+
+    # Создаем нового пользователя
+    db_user = models.User(
+        username=user.username,
+        hashed_password=hashed_password
+    )
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+    return db_user
+
+
+@app.post("/login")
+def login(credentials: schemas.UserLogin, db: Session = Depends(get_db)):
+    # Ищем пользователя по имени
+    db_user = db.query(models.User).filter(models.User.username == credentials.username).first()
+    if not db_user or not db_user.verify_password(credentials.password):
+        raise HTTPException(
+            status_code=401,
+            detail="Неверное имя пользователя или пароль",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    return {"message": "Вход выполнен успешно", "username": db_user.username}
