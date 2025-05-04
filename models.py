@@ -1,5 +1,5 @@
 """
-Создаём щаблоны таблиц в БД
+Создаём шаблоны таблиц в БД
 """
 from sqlalchemy import Column, Integer, String, Float, ForeignKey
 from sqlalchemy.orm import relationship
@@ -41,8 +41,8 @@ class TimeMatrix(Base):
         from_location_id (int): Идентификатор стартовой локации.
         to_location_id (int): Идентификатор конечной локации.
         travel_time (float): Время в пути (в минутах)
-        from_location (str): Название стартовой локации.
-        to_location (str): Название конечной локации.
+        from_location: Cтартовая локация.
+        to_location: Конечная локация.
     """
     __tablename__ = "time_matrix"
     id = Column(Integer, primary_key=True)

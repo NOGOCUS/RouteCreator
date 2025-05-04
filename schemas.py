@@ -1,5 +1,7 @@
+"""
+Модуль содержит Pydantic-модели для обработки данных в БД
+"""
 from pydantic import BaseModel
-from typing import List
 
 # --- Водитель ---
 class DriverBase(BaseModel):
