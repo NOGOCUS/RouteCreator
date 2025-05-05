@@ -4,14 +4,14 @@
 
 
 import os
+
+os.environ["ENV"] = "test"
+
 from sqlalchemy.orm import sessionmaker
 from fastapi.testclient import TestClient
 from app.main import app
 from app.db.database import get_db
 from app.db.database import Base, engine
-
-os.environ["ENV"] = "test"
-
 
 
 

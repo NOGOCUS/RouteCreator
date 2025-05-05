@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 ENV = os.getenv("ENV", "dev")
 
 if ENV == "test":
-    load_dotenv("tests/.env.test")
+    load_dotenv("tests/.env.testing")
 else:
     load_dotenv("app/.env")
 
