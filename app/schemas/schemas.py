@@ -86,7 +86,6 @@ class UserLogin(BaseModel):
     password: str
 
 class UserResponse(BaseModel):
-    id: int
     username: str
     class Config:
         from_attributes = True
