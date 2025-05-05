@@ -12,13 +12,13 @@ class Driver(Base):
     Таблица водителей
     Атрибуты:
         id (int): Уникальный идентификатор водителя.
-        name (str): Имя водителя (уникальное).
+        name (str): Имя водителя.
         user_id (int): Идентификатор пользователя.
         user: Пользователь.
     """
     __tablename__ = "drivers"
     id = Column(Integer, primary_key=True)
-    name = Column(String, unique=True, index=True)
+    name = Column(String, index=True)
     user_id = Column(Integer, ForeignKey("users.id"))
     user = relationship("User")
 
@@ -27,13 +27,13 @@ class Location(Base):
     Таблица возможных пунктов назначения
     Атрибуты:
         id (int): Уникальный идентификатор пункта назначения.
-        name (str): Название  пункта назначения (уникальное).
+        name (str): Название  пункта назначения.
         user_id (int): Идентификатор пользователя.
         user: Пользователь.
     """
     __tablename__ = "locations"
     id = Column(Integer, primary_key=True)
-    name = Column(String, unique=True, index=True)
+    name = Column(String, index=True)
     user_id = Column(Integer, ForeignKey("users.id"))
     user = relationship("User")
 
