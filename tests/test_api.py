@@ -1,14 +1,19 @@
 """
 Программа для выполнения тестов на основе TestClient
 """
-import os
-os.environ["ENV"] = "test"
 
+
+import os
+from sqlalchemy.orm import sessionmaker
 from fastapi.testclient import TestClient
 from app.main import app
 from app.db.database import get_db
 from app.db.database import Base, engine
-from sqlalchemy.orm import sessionmaker
+
+os.environ["ENV"] = "test"
+
+
+
 
 client = TestClient(app)
 
@@ -124,7 +129,7 @@ def test_get_all_locations():
     assert any(l["name"] == "Локация B" for l in locations)
 
 
-def test_time_matrix():
+def test_get_time_matrix():
     token_data, _ = login_user("testuser", "testpass")
     token = token_data["access_token"]
 
