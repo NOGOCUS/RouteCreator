@@ -10,7 +10,7 @@ from app.crud.auth import get_current_user
 
 router = APIRouter(tags=["Работа с БД"])
 
-# === Водители ===
+#Водители
 @router.post("/drivers/", response_model=schemas.DriverResponse)
 def create_driver(driver: schemas.DriverCreate, db: Session = Depends(get_db),
                   current_user: dict = Depends(get_current_user)):
@@ -39,7 +39,7 @@ def delete_driver(driver_id: int, db: Session = Depends(get_db),
     return {"status": "Успешно удален", "driver_id": driver_id}
 
 
-# === Локации ===
+#Локации
 @router.post("/locations/", response_model=schemas.LocationResponse)
 def create_location(location: schemas.LocationCreate, db: Session = Depends(get_db),
                     current_user: dict = Depends(get_current_user)):
@@ -56,7 +56,7 @@ def read_locations(db: Session = Depends(get_db),
     return db.query(models.Location).filter(models.Location.user_id == current_user.id).all()
 
 
-# === Матрица времени ===
+#Матрица времени
 @router.post("/time-matrix/", response_model=schemas.TimeMatrixResponse)
 def create_time_matrix(matrix: schemas.TimeMatrixCreate, db: Session = Depends(get_db),
                        current_user: dict = Depends(get_current_user)):
@@ -111,7 +111,7 @@ def update_time_matrix(matrix: schemas.TimeMatrixCreate, db: Session = Depends(g
     return db_entry
 
 
-# === Маршруты ===
+#Маршруты
 @router.post("/routes/", response_model=schemas.RouteResponse)
 def create_route(route: schemas.RouteCreate, db: Session = Depends(get_db),
                  current_user: dict = Depends(get_current_user)):

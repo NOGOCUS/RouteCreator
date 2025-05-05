@@ -26,7 +26,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
 
 router = APIRouter(tags=["Авторизация и безопасность"])
 
-# === Функции безопасности ===
+
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
 
@@ -61,7 +61,9 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
         raise credentials_exception
     return user
 
-# === Роуты ===
+
+
+
 @router.post("/register", response_model=schemas.UserResponse, tags=["Авторизация и безопасность"])
 def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
     # Проверка на существование пользователя

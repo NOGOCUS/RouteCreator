@@ -3,7 +3,7 @@
 """
 from pydantic import BaseModel
 
-# --- Водитель ---
+#Водитель
 class DriverBase(BaseModel):
     name: str
 
@@ -15,7 +15,7 @@ class DriverResponse(DriverBase):
     class Config:
         from_attributes = True
 
-# --- Пункт назначения ---
+#Пункт назначения
 class LocationBase(BaseModel):
     name: str
 
@@ -28,7 +28,7 @@ class LocationResponse(LocationBase):
         from_attributes = True
 
 
-# --- Время в пути ---
+#Время в пути
 class TimeMatrixBase(BaseModel):
     from_location_id: int
     to_location_id: int
@@ -43,7 +43,7 @@ class TimeMatrixResponse(TimeMatrixBase):
         from_attributes = True
 
 
-# --- Маршрут ---
+#Маршрут
 class RouteBase(BaseModel):
     start_location_id: int
     end_location_id: int
@@ -57,7 +57,7 @@ class RouteResponse(RouteBase):
     class Config:
         from_attributes = True
 
-# --- Расписание ---
+#Расписание
 class ScheduleBase(BaseModel):
     driver_name: str
     route_id: int
@@ -76,7 +76,7 @@ class ScheduleResponse(ScheduleBase):
         from_attributes = True
 
 
-# --- Пользователь ---
+#Пользователь
 class UserCreate(BaseModel):
     username: str
     password: str

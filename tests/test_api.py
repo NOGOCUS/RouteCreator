@@ -77,7 +77,7 @@ def test_register_and_login():
     assert code == 200
     assert "access_token" in token_data
 
-def test_crud_operations():
+def test_post_operations():
     token_data, _ = login_user("testuser", "testpass")
     token = token_data["access_token"]
 
