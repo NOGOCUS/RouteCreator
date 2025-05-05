@@ -9,7 +9,9 @@ from app.crud.schedule import router as schedule_router
 
 Base.metadata.create_all(bind=engine)
 
-app = FastAPI()
+app = FastAPI(title="RouteCreator",
+    description="Система для генерации и хранения расписания, основанная на генетическом алгоритме"
+        )
 
 
 app.include_router(auth_router)
